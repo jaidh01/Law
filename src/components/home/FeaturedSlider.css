@@ -1,0 +1,10 @@
+/* Custom styles for pagination bullets */
+.featured-slider .custom-bullet {
+  background-color: rgba(255, 255, 255, 0.3) !important; /* Darker/dimmer bullet color */
+  opacity: 0.4;
+}
+
+.featured-slider .custom-bullet-active {
+  background-color: rgb(3, 166, 254) !important; /* Active bullet is a bit brighter but still dim */
+  opacity: 0.6;
+}

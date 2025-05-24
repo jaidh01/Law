@@ -1,0 +1,124 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans text-neutral-800 bg-gray-50;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif font-bold text-neutral-900;
+  }
+  
+  h1 {
+    @apply text-3xl md:text-4xl leading-tight;
+  }
+  
+  h2 {
+    @apply text-2xl md:text-3xl leading-tight;
+  }
+  
+  h3 {
+    @apply text-xl md:text-2xl leading-snug;
+  }
+  
+  h4 {
+    @apply text-lg md:text-xl leading-snug;
+  }
+  
+  p {
+    @apply leading-relaxed;
+  }
+}
+
+@layer components {
+  .container-custom {
+    @apply px-4 mx-auto max-w-7xl;
+  }
+  
+  .nav-link {
+    @apply text-neutral-700 hover:text-primary-500 transition-colors duration-200;
+  }
+  
+  .nav-link-active {
+    @apply text-primary-500 font-medium;
+  }
+  
+  .btn {
+    @apply px-4 py-2 rounded font-medium transition-colors duration-200;
+  }
+  
+  .btn-primary {
+    @apply bg-primary-500 text-white hover:bg-primary-600;
+  }
+  
+  .btn-accent {
+    @apply bg-accent-500 text-white hover:bg-accent-600;
+  }
+  
+  .btn-outline {
+    @apply border border-primary-500 text-primary-500 hover:bg-primary-50;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-200 hover:shadow-lg;
+  }
+  
+  .card-hover {
+    @apply hover:-translate-y-1;
+  }
+  
+  .form-input {
+    @apply w-full px-3 py-2 border border-neutral-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-300;
+  }
+}
+
+/* Dropdown animations */
+.dropdown-enter {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.dropdown-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 200ms, transform 200ms;
+}
+
+.dropdown-exit {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.dropdown-exit-active {
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 200ms, transform 200ms;
+}
+
+/* News ticker styles */
+.ticker-container {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.ticker-wrapper {
+  display: inline-block;
+  animation: ticker 30s linear infinite;
+  animation-delay: 0s;
+}
+
+.ticker-wrapper:hover {
+  animation-play-state: paused;
+}
+
+/* Swiper custom styles */
+.swiper-pagination-bullet-active {
+  @apply bg-primary-500;
+}
+
+.swiper-button-prev,
+.swiper-button-next {
+  @apply text-primary-500;
+}
