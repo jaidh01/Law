@@ -8,6 +8,7 @@ import NotFoundPage from './pages/NotFoundPage';
 import CourtPage from './pages/CourtPage';
 import CourtsHubPage from './pages/CourtsHubPage'; 
 import LawFirmsPage from './pages/LawFirmsPage';
+import NetworkStatus from './components/common/NetworkStatus';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+      <NetworkStatus />
     </Layout>
   );
 }

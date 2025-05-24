@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { fetchArticleBySlug, fetchRelatedArticles } from '../services/articleService';
 import { Article } from '../types/article';
 import ArticleCard from '../components/articles/ArticleCard';
+import LoadingIndicator from '../components/common/LoadingIndicator';
 
 const ArticlePage: React.FC = () => {
   const { articleSlug } = useParams<{ articleSlug: string }>();
@@ -46,10 +47,12 @@ const ArticlePage: React.FC = () => {
   
   if (loading) {
     return (
-      <div className="container-custom py-12">
-        <div className="bg-white rounded-lg shadow p-8 text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500 mx-auto"></div>
-          <p className="mt-4 text-neutral-600">Loading article...</p>
+      <div className="container-custom py-8">
+        <h1 className="text-3xl md:text-4xl font-serif font-bold mb-8">
+          {categoryName}
+        </h1>
+        <div className="bg-white rounded-lg shadow p-4 sm:p-8">
+          <LoadingIndicator message={`Loading ${categoryName} articles...`} />
         </div>
       </div>
     );
@@ -124,9 +127,9 @@ const ArticlePage: React.FC = () => {
           )}
         </header>
         
-        <div className="prose prose-lg max-w-none mb-8">
+        <div className="prose prose-lg md:prose-xl max-w-none mb-8 prose-headings:font-serif prose-headings:font-bold prose-a:text-primary-600 prose-a:no-underline hover:prose-a:underline">
           {article.content.split('\n\n').map((paragraph, index) => (
-            <p key={index} className="mb-4 leading-relaxed">
+            <p key={index} className="mb-4 leading-relaxed text-base sm:text-lg">
               {paragraph}
             </p>
           ))}
@@ -134,14 +137,32 @@ const ArticlePage: React.FC = () => {
         
         {article.pdf_url && (
           <div className="mb-8 p-4 border border-primary-100 rounded-lg bg-primary-50">
-            <p className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-              <a href={article.pdf_url} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">
-                Download PDF version of this judgment
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-start sm:items-center">
+                <FileText size={24} className="text-primary-600 mr-3 shrink-0 mt-1 sm:mt-0" />
+                <div>
+                  <p className="font-medium text-primary-800">
+                    {article.category.includes("Court") || article.tags.some(tag => tag.includes("Court") || tag.includes("Judgment")) 
+                      ? "Download PDF of Full Judgment" 
+                      : "Download PDF Version"}
+                  </p>
+                  <p className="text-sm text-primary-600">
+                    {article.category.includes("Supreme") ? "Supreme Court of India" : 
+                    article.category.includes("High") ? "High Court Judgment" : 
+                    "Official Document"}
+                  </p>
+                </div>
+              </div>
+              <a 
+                href={article.pdf_url} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="btn btn-primary flex items-center w-full sm:w-auto justify-center"
+              >
+                <Download size={16} className="mr-2" />
+                Download PDF
               </a>
-            </p>
+            </div>
           </div>
         )}
         

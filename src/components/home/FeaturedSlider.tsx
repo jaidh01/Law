@@ -66,7 +66,7 @@ const FeaturedSlider: React.FC<FeaturedSliderProps> = ({ maxArticles = 5 }) => {
           delay: 5000,
           disableOnInteraction: false
         }}
-        className="rounded-xl overflow-hidden h-[400px] md:h-[500px] featured-slider"
+        className="rounded-xl overflow-hidden h-[300px] md:h-[400px] featured-slider"
       >
         {articles.map((article) => (
           <SwiperSlide key={article.id}>
