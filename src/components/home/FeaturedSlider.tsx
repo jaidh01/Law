@@ -5,6 +5,7 @@ import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import { formatDistanceToNow } from 'date-fns';
 import { fetchFeaturedArticles } from '../../services/articleService';
 import { Article } from '../../types/article';
+import { RefreshCcw } from 'lucide-react';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -22,33 +23,88 @@ const FeaturedSlider: React.FC<FeaturedSliderProps> = ({ maxArticles = 5 }) => {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  
+  // Try to get articles from localStorage on component mount
+  useEffect(() => {
+    const cachedArticles = localStorage.getItem('featuredArticles');
+    if (cachedArticles) {
+      try {
+        const parsedArticles = JSON.parse(cachedArticles);
+        setArticles(parsedArticles.slice(0, maxArticles));
+        // We still fetch fresh data but at least we show something immediately
+      } catch (e) {
+        // Invalid cached data - we'll rely on the fetch
+      }
+    }
+  }, [maxArticles]);
 
   useEffect(() => {
     const loadFeaturedArticles = async () => {
       try {
-        const data = await fetchFeaturedArticles();
-        // Limit the number of articles to display
+        setLoading(true);
+        const data = await fetchFeaturedArticles(maxArticles);
+        
+        // Cache the results for future use
+        localStorage.setItem('featuredArticles', JSON.stringify(data));
+        
         setArticles(data.slice(0, maxArticles));
+        setError(null);
         setLoading(false);
       } catch (err) {
-        setError('Failed to load featured articles');
-        setLoading(false);
+        console.error('Featured article fetch error:', err);
+        
+        // Check if we have cached articles already displayed
+        if (articles.length > 0) {
+          // We have cached articles, so just stop loading
+          setLoading(false);
+        } else {
+          setError('Failed to load featured articles');
+          setLoading(false);
+        }
       }
     };
 
     loadFeaturedArticles();
-  }, [maxArticles]);
+  }, [maxArticles, retryCount]);
 
-  if (loading) {
-    return <div className="h-[400px] bg-gray-200 rounded-xl flex items-center justify-center">Loading...</div>;
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+  };
+
+  // For improved mobile loading, use a fallback UI if there's an error but we have cached data
+  if (error && articles.length === 0) {
+    return (
+      <div className="mb-12 rounded-xl overflow-hidden h-[300px] sm:h-[400px] bg-neutral-50 flex flex-col items-center justify-center text-center p-6">
+        <p className="text-neutral-600 mb-4">Unable to load the latest articles.</p>
+        <button 
+          onClick={handleRetry} 
+          className="btn btn-primary inline-flex items-center"
+        >
+          <RefreshCcw size={16} className="mr-2" />
+          Retry
+        </button>
+      </div>
+    );
   }
 
-  if (error) {
-    return <div className="h-[400px] bg-gray-100 rounded-xl flex items-center justify-center text-red-500">{error}</div>;
+  if (loading && articles.length === 0) {
+    return (
+      <div className="mb-12 rounded-xl overflow-hidden h-[300px] sm:h-[400px] bg-neutral-100 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+          <p className="mt-4 text-neutral-600">Loading featured articles...</p>
+        </div>
+      </div>
+    );
   }
 
   if (articles.length === 0) {
-    return <div className="h-[400px] bg-gray-100 rounded-xl flex items-center justify-center">No featured articles found</div>;
+    return (
+      <div className="mb-12 rounded-xl overflow-hidden h-[300px] sm:h-[400px] bg-neutral-50 flex items-center justify-center">
+        <p className="text-neutral-600">No featured articles available</p>
+      </div>
+    );
   }
 
   return (
@@ -66,7 +122,7 @@ const FeaturedSlider: React.FC<FeaturedSliderProps> = ({ maxArticles = 5 }) => {
           delay: 5000,
           disableOnInteraction: false
         }}
-        className="rounded-xl overflow-hidden h-[300px] md:h-[400px] featured-slider"
+        className="rounded-xl overflow-hidden h-[300px] sm:h-[400px] md:h-[500px] featured-slider"
       >
         {articles.map((article) => (
           <SwiperSlide key={article.id}>
@@ -76,22 +132,22 @@ const FeaturedSlider: React.FC<FeaturedSliderProps> = ({ maxArticles = 5 }) => {
                 style={{ backgroundImage: `url(${article.image})` }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8 text-white">
+              <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8 text-white">
                 <Link 
                   to={`/category/${article.category.toLowerCase().replace(/\s+/g, '-')}`}
-                  className="inline-block px-3 py-1 bg-accent-500 text-white text-sm font-medium rounded mb-3"
+                  className="inline-block px-3 py-1 bg-accent-500 text-white text-xs sm:text-sm font-medium rounded mb-2 sm:mb-3"
                 >
                   {article.category}
                 </Link>
-                <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-3 text-white">
+                <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3 text-white line-clamp-2">
                   <Link to={`/article/${article.slug}`} className="hover:underline">
                     {article.title}
                   </Link>
                 </h2>
-                <p className="text-neutral-200 mb-4 max-w-2xl">
+                <p className="text-neutral-200 mb-3 sm:mb-4 max-w-2xl line-clamp-2 hidden sm:block">
                   {article.excerpt}
                 </p>
-                <div className="flex items-center text-sm text-neutral-300">
+                <div className="flex items-center text-xs sm:text-sm text-neutral-300">
                   <span>{article.author}</span>
                   <span className="mx-2">•</span>
                   <time dateTime={article.date}>

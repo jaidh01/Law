@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { Article } from '../../types/article';
+import ImageWithFallback from '../common/ImageWithFallback';
 
 interface ArticleCardProps {
   article: Article;
@@ -12,11 +13,10 @@ const ArticleCard: React.FC<ArticleCardProps> = ({ article }) => {
     <article className="card card-hover animate-slide-up">
       <Link to={`/article/${article.slug}`} className="block w-full">
         <div className="aspect-video w-full overflow-hidden">
-          <img 
+          <ImageWithFallback 
             src={article.image} 
             alt={article.title} 
             className="w-full h-full object-cover transform hover:scale-105 transition-transform"
-            loading="lazy" // Add lazy loading for better mobile performance
           />
         </div>
       </Link>

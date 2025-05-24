@@ -4,42 +4,76 @@ import { Article } from '../types/article';
 // Create an axios instance with timeout and mobile-friendly settings
 const api = axios.create({
   baseURL: 'http://localhost:5000/api/articles',
-  timeout: 10000, // Increase timeout for slower mobile connections
+  timeout: 15000, // Increased timeout for slower mobile connections
   headers: {
     'Content-Type': 'application/json',
   }
 });
 
 // Add a retry mechanism for mobile network instability
-const fetchWithRetry = async (url: string, retries = 2) => {
+const fetchWithRetry = async (url: string, retries = 3) => {
   let lastError;
   for (let i = 0; i <= retries; i++) {
     try {
       const response = await api.get(url);
+      // When successful, store in cache
+      try {
+        localStorage.setItem(`cache_${url}`, JSON.stringify({
+          data: response.data,
+          timestamp: Date.now()
+        }));
+      } catch (e) {
+        // Handle storage errors silently
+        console.warn('Failed to cache data:', e);
+      }
       return response.data;
     } catch (error) {
       console.error(`Attempt ${i + 1} failed for ${url}:`, error);
       lastError = error;
       // Only wait if we're going to retry
       if (i < retries) {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
       }
     }
   }
+  
+  // After all retries failed, try to get from cache
+  try {
+    const cachedData = localStorage.getItem(`cache_${url}`);
+    if (cachedData) {
+      const parsed = JSON.parse(cachedData);
+      // Use cached data if it's less than 24 hours old
+      if (Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000) {
+        console.log(`Using cached data for ${url}`);
+        return parsed.data;
+      }
+    }
+  } catch (e) {
+    console.error('Error accessing cache:', e);
+  }
+  
   throw lastError;
 };
 
 export const fetchFeaturedArticles = async (limit: number = 5): Promise<Article[]> => {
   try {
     const data = await fetchWithRetry(`/featured?limit=${limit}`);
-    return data.map(mapArticleResponse);
+    const mappedData = data.map(mapArticleResponse);
+    // Store for immediate access on future loads
+    try {
+      localStorage.setItem('featuredArticles', JSON.stringify(mappedData));
+    } catch (e) {
+      console.warn('Failed to cache featured articles:', e);
+    }
+    return mappedData;
   } catch (error) {
     console.error('Error fetching featured articles:', error);
     // In case of network error, try to use cached data if available
     const cachedData = localStorage.getItem('featuredArticles');
     if (cachedData) {
       console.log('Using cached featured articles');
-      return JSON.parse(cachedData).map(mapArticleResponse);
+      return JSON.parse(cachedData);
     }
     throw error;
   }
@@ -48,16 +82,21 @@ export const fetchFeaturedArticles = async (limit: number = 5): Promise<Article[
 export const fetchArticlesByCategory = async (categorySlug: string): Promise<Article[]> => {
   try {
     const data = await fetchWithRetry(`/category/${categorySlug}`);
+    const mappedData = data.map(mapArticleResponse);
     // Cache the result for future use
-    localStorage.setItem(`category_${categorySlug}`, JSON.stringify(data));
-    return data.map(mapArticleResponse);
+    try {
+      localStorage.setItem(`category_${categorySlug}`, JSON.stringify(mappedData));
+    } catch (e) {
+      console.warn(`Failed to cache category ${categorySlug}:`, e);
+    }
+    return mappedData;
   } catch (error) {
     console.error(`Error fetching articles for category ${categorySlug}:`, error);
     // Try to use cached data
     const cachedData = localStorage.getItem(`category_${categorySlug}`);
     if (cachedData) {
       console.log(`Using cached data for category ${categorySlug}`);
-      return JSON.parse(cachedData).map(mapArticleResponse);
+      return JSON.parse(cachedData);
     }
     throw error;
   }

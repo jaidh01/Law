@@ -22,9 +22,9 @@ function App() {
         {/* Law Firms routes */}
         <Route path="/law-firms" element={<LawFirmsPage />} />
         <Route path="/law-firms/:subsection" element={<LawFirmsPage />} />
-        
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
+
       <NetworkStatus />
     </Layout>
   );
