@@ -11,4 +11,6 @@ export interface Article {
   imageCaption?: string;
   category: string;
   tags: string[];
+  pdf_url?: string;  // Add this property
+  source?: string;
 }

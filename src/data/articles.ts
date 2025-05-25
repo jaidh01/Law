@@ -1,22 +1,5 @@
 import { Article } from '../types/article';
 
-export interface Article {
-  id: string | number;
-  title: string;
-  slug: string;
-  excerpt: string;
-  content: string;
-  author: string;
-  authorBio?: string;
-  date: string; // ISO string date
-  image: string;
-  imageCaption?: string;
-  category: string;
-  tags: string[];
-  pdf_url?: string;
-  source?: string;
-}
-
 export const featuredArticles: Article[] = [
   {
     id: 1,
@@ -759,3 +742,5 @@ export const getRelatedArticles = (category: string, currentSlug: string): Artic
     )
     .slice(0, 3);
 };
+
+export const articles = [...featuredArticles, ...latestArticles];

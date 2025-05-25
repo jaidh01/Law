@@ -1,10 +1,13 @@
 import axios from 'axios';
 import { Article } from '../types/article';
+import apiBaseUrl from './apiConfig';
 
-// Create an axios instance with timeout and mobile-friendly settings
+// Add this import for mock articles
+import { featuredArticles as mockArticles } from '../data/articles';
+
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api/articles',
-  timeout: 15000, // Increased timeout for slower mobile connections
+  baseURL: apiBaseUrl,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   }
@@ -27,9 +30,27 @@ const fetchWithRetry = async (url: string, retries = 3) => {
         console.warn('Failed to cache data:', e);
       }
       return response.data;
-    } catch (error) {
-      console.error(`Attempt ${i + 1} failed for ${url}:`, error);
-      lastError = error;
+    } catch (error: any) {
+      let errorMessage = 'Unknown error occurred';
+      
+      // Extract meaningful error messages based on error type
+      if (error.response) {
+        // Server responded with error status
+        errorMessage = `Server error: ${error.response.status}`;
+        console.error('Server Error:', error.response.data);
+      } else if (error.request) {
+        // Request was made but no response received (network issue)
+        errorMessage = 'Network error: No response received from server';
+        console.error('Network Error:', error.request);
+      } else {
+        // Request setup failed
+        errorMessage = `Request error: ${error.message}`;
+        console.error('Request Error:', error.message);
+      }
+      
+      lastError = new Error(errorMessage);
+      console.error(`Attempt ${i + 1} failed for ${url}:`, errorMessage);
+      
       // Only wait if we're going to retry
       if (i < retries) {
         // Exponential backoff
@@ -53,29 +74,32 @@ const fetchWithRetry = async (url: string, retries = 3) => {
     console.error('Error accessing cache:', e);
   }
   
-  throw lastError;
+  throw lastError || new Error('Failed to fetch data after multiple attempts');
 };
 
 export const fetchFeaturedArticles = async (limit: number = 5): Promise<Article[]> => {
   try {
     const data = await fetchWithRetry(`/featured?limit=${limit}`);
-    const mappedData = data.map(mapArticleResponse);
-    // Store for immediate access on future loads
-    try {
-      localStorage.setItem('featuredArticles', JSON.stringify(mappedData));
-    } catch (e) {
-      console.warn('Failed to cache featured articles:', e);
-    }
-    return mappedData;
+    return data.map(mapArticleResponse);
   } catch (error) {
     console.error('Error fetching featured articles:', error);
+    
     // In case of network error, try to use cached data if available
     const cachedData = localStorage.getItem('featuredArticles');
     if (cachedData) {
       console.log('Using cached featured articles');
       return JSON.parse(cachedData);
     }
-    throw error;
+    
+    // If no cache, use mock data as last resort
+    console.log('Using mock data for featured articles');
+    const featured = mockArticles
+      .filter(article => 
+        article.tags.includes('Featured') || 
+        ['Supreme Court', 'High Courts', 'News Updates'].includes(article.category)
+      )
+      .slice(0, limit);
+    return featured;
   }
 };
 
