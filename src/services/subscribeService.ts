@@ -11,35 +11,15 @@ interface SubscribeResponse {
  * @returns Promise with subscription response
  */
 export const subscribeToNewsletter = async (email: string): Promise<SubscribeResponse> => {
+  // Mock the subscription instead of making an actual API request
   try {
-    // Extract the base API URL without the "/articles" part
-    const baseApiUrl = apiBaseUrl.replace('/api/articles', '/api');
-    const subscribeUrl = `${baseApiUrl}/subscribe`;
+    console.log('Subscription requested for:', email);
     
-    const response = await fetch(subscribeUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email }),
-    });
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.message || 'Failed to subscribe');
-    }
-    
-    return {
-      success: true,
-      message: data.message || 'Thank you for subscribing to Legal Nest updates!'
-    };
-  } catch (error) {
-    console.error('Subscription error:', error);
-    
-    // Attempt to store locally if backend is unavailable
+    // Store locally in localStorage
     try {
-      // Get existing subscribers from localStorage or initialize empty array
       const storedSubscribers = localStorage.getItem('pendingSubscribers');
       const subscribers = storedSubscribers ? JSON.parse(storedSubscribers) : [];
       
@@ -54,48 +34,43 @@ export const subscribeToNewsletter = async (email: string): Promise<SubscribeRes
       
       return {
         success: true,
-        message: 'Thank you for subscribing to Legal Nest updates! (Saved locally)'
+        message: 'Thank you for subscribing! (Saved locally only)'
       };
     } catch (localStorageError) {
+      console.error('Local storage error:', localStorageError);
       return {
         success: false,
-        message: 'Something went wrong. Please try again later.'
+        message: 'Could not save your subscription. Please try again later.'
       };
     }
+  } catch (error) {
+    console.error('Subscription error:', error);
+    return {
+      success: false,
+      message: 'Something went wrong. Please try again later.'
+    };
   }
 };
 
 /**
  * Syncs locally stored subscribers to the backend when connectivity is restored
+ * Currently disabled - only logs the subscribers that would be synced
  */
 export const syncLocalSubscribers = async (): Promise<void> => {
   try {
     const storedSubscribers = localStorage.getItem('pendingSubscribers');
-    if (!storedSubscribers) return;
+    if (!storedSubscribers) {
+      console.log('No pending subscribers to sync');
+      return;
+    }
     
     const subscribers = JSON.parse(storedSubscribers);
-    if (!subscribers.length) return;
+    console.log(`Found ${subscribers.length} locally stored subscribers (sync disabled):`, subscribers);
     
-    // Extract the base API URL without the "/articles" part
-    const baseApiUrl = apiBaseUrl.replace('/api/articles', '/api');
-    const bulkSubscribeUrl = `${baseApiUrl}/subscribe/bulk`;
+    // Don't actually sync with backend for now
+    // No API calls will be made
     
-    const response = await fetch(bulkSubscribeUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ subscribers }),
-    });
-    
-    if (response.ok) {
-      // Clear locally stored subscribers after successful sync
-      localStorage.removeItem('pendingSubscribers');
-      console.log('Successfully synced local subscribers with the server');
-    } else {
-      console.error('Failed to sync subscribers:', await response.text());
-    }
   } catch (error) {
-    console.error('Failed to sync local subscribers:', error);
+    console.error('Error checking local subscribers:', error);
   }
 };
