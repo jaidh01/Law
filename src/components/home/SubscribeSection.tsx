@@ -1,7 +1,54 @@
-import React from 'react';
-import { Mail } from 'lucide-react';
+import React, { useState } from 'react';
+import { Mail, CheckCircle, AlertCircle } from 'lucide-react';
+import { subscribeToNewsletter } from '../../services/subscribeService';
+
+type SubscriptionStatus = 'idle' | 'loading' | 'success' | 'error';
 
 const SubscribeSection: React.FC = () => {
+  const [email, setEmail] = useState<string>('');
+  const [status, setStatus] = useState<SubscriptionStatus>('idle');
+  const [message, setMessage] = useState<string>('');
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !email.includes('@')) {
+      setStatus('error');
+      setMessage('Please enter a valid email address');
+      return;
+    }
+    
+    setStatus('loading');
+    
+    try {
+      const result = await subscribeToNewsletter(email);
+      
+      if (result.success) {
+        setStatus('success');
+        setMessage(result.message);
+        setEmail('');
+      } else {
+        setStatus('error');
+        setMessage(result.message);
+      }
+      
+      // Reset after 5 seconds
+      setTimeout(() => {
+        setStatus('idle');
+        setMessage('');
+      }, 5000);
+    } catch (error) {
+      console.error('Error in subscription process:', error);
+      setStatus('error');
+      setMessage('Something went wrong. Please try again later.');
+      
+      setTimeout(() => {
+        setStatus('idle');
+        setMessage('');
+      }, 5000);
+    }
+  };
+
   return (
     <div className="mb-12 bg-primary-100 text-primary-700 rounded-xl overflow-hidden shadow-lg">
       <div className="container-custom py-16">
@@ -15,24 +62,61 @@ const SubscribeSection: React.FC = () => {
               legal developments, and breaking legal news - directly to your inbox.
             </p>
             
-            <form className="flex flex-col sm:flex-row gap-3">
+            <form className="flex flex-col sm:flex-row gap-3" onSubmit={handleSubscribe}>
               <div className="flex-grow">
                 <input
                   type="email"
                   id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="w-full px-5 py-4 rounded-md text-neutral-800 placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-400 border border-primary-200"
                   placeholder="Enter your email address"
                   required
+                  disabled={status === 'loading'}
                 />
               </div>
               <button 
                 type="submit" 
-                className="btn bg-accent-500 hover:bg-accent-600 text-white flex items-center justify-center px-8 py-4 rounded-md"
+                className={`btn ${
+                  status === 'loading' ? 'bg-neutral-400' : 
+                  status === 'success' ? 'bg-green-500 hover:bg-green-600' : 
+                  status === 'error' ? 'bg-red-500 hover:bg-red-600' : 
+                  'bg-accent-500 hover:bg-accent-600'
+                } text-white flex items-center justify-center px-8 py-4 rounded-md min-w-[160px] transition-colors`}
+                disabled={status === 'loading'}
               >
-                <Mail size={20} className="mr-2" />
-                Subscribe
+                {status === 'loading' ? (
+                  <>
+                    <div className="animate-spin h-5 w-5 border-2 border-white border-t-transparent rounded-full mr-2"></div>
+                    Subscribing...
+                  </>
+                ) : status === 'success' ? (
+                  <>
+                    <CheckCircle size={20} className="mr-2" />
+                    Subscribed!
+                  </>
+                ) : status === 'error' ? (
+                  <>
+                    <AlertCircle size={20} className="mr-2" />
+                    Try Again
+                  </>
+                ) : (
+                  <>
+                    <Mail size={20} className="mr-2" />
+                    Subscribe
+                  </>
+                )}
               </button>
             </form>
+            
+            {message && (
+              <div className={`mt-4 p-3 rounded-md ${
+                status === 'success' ? 'bg-green-100 text-green-700' : 
+                status === 'error' ? 'bg-red-100 text-red-700' : ''
+              }`}>
+                {message}
+              </div>
+            )}
             
             <p className="text-sm mt-5 text-primary-500">
               By subscribing, you agree to our Privacy Policy. Unsubscribe anytime.
@@ -41,13 +125,11 @@ const SubscribeSection: React.FC = () => {
           
           <div className="flex justify-center items-center">
             <div className="relative w-80 h-80">
-              {/* Larger animated lawyer image */}
               <img 
                 src="https://cdn3d.iconscout.com/3d/premium/thumb/female-lawyer-5708429-4779532.png"
                 alt="Lawyer illustration" 
                 className="w-full h-full object-contain animate-bounce-slow"
               />
-              {/* Add a subtle animation effect */}
               <div className="absolute -inset-2 rounded-full bg-primary-200/50 blur-lg -z-10"></div>
             </div>
           </div>
@@ -58,102 +140,3 @@ const SubscribeSection: React.FC = () => {
 };
 
 export default SubscribeSection;
-
-
-
-
-// import React from 'react';
-// import { Mail } from 'lucide-react';
-
-// const SubscribeSection: React.FC = () => {
-//   return (
-//     <div className="mb-12 bg-primary-500 text-white rounded-xl overflow-hidden">
-//       <div className="container-custom py-12">
-//         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-//           <div>
-//             <h2 className="text-3xl font-serif font-bold mb-4">
-//               Stay Updated with Legal News
-//             </h2>
-//             <p className="text-primary-100 mb-6">
-//               Subscribe to our newsletter and receive daily updates on court judgments, 
-//               legal developments, law firm news, and more - directly to your inbox.
-//             </p>
-//             <ul className="space-y-2 mb-6">
-//               {[
-//                 'Daily Supreme Court & High Court Updates',
-//                 'Analysis of Landmark Judgments',
-//                 'Legal News Alerts & Notifications',
-//                 'Special Reports & Interviews'
-//               ].map((benefit, index) => (
-//                 <li key={index} className="flex items-start">
-//                   <span className="inline-block mr-2 mt-1 text-primary-200">✓</span>
-//                   <span>{benefit}</span>
-//                 </li>
-//               ))}
-//             </ul>
-//           </div>
-          
-//           <div className="bg-primary-600 p-8 rounded-lg">
-//             <h3 className="text-xl font-serif font-bold mb-4">
-//               Sign Up for Free
-//             </h3>
-//             <form className="space-y-4">
-//               <div>
-//                 <label htmlFor="name" className="block text-sm font-medium mb-1">
-//                   Full Name
-//                 </label>
-//                 <input
-//                   type="text"
-//                   id="name"
-//                   className="w-full px-3 py-2 bg-primary-700 border border-primary-400 rounded-md text-white placeholder-primary-300 focus:outline-none focus:ring-1 focus:ring-primary-200"
-//                   placeholder="Enter your name"
-//                 />
-//               </div>
-              
-//               <div>
-//                 <label htmlFor="email" className="block text-sm font-medium mb-1">
-//                   Email Address
-//                 </label>
-//                 <input
-//                   type="email"
-//                   id="email"
-//                   className="w-full px-3 py-2 bg-primary-700 border border-primary-400 rounded-md text-white placeholder-primary-300 focus:outline-none focus:ring-1 focus:ring-primary-200"
-//                   placeholder="Enter your email"
-//                 />
-//               </div>
-              
-//               <div>
-//                 <label htmlFor="profession" className="block text-sm font-medium mb-1">
-//                   Profession
-//                 </label>
-//                 <select
-//                   id="profession"
-//                   className="w-full px-3 py-2 bg-primary-700 border border-primary-400 rounded-md text-white placeholder-primary-300 focus:outline-none focus:ring-1 focus:ring-primary-200"
-//                 >
-//                   <option value="">Select your profession</option>
-//                   <option value="advocate">Advocate</option>
-//                   <option value="judge">Judge</option>
-//                   <option value="student">Law Student</option>
-//                   <option value="academic">Academic</option>
-//                   <option value="other">Other</option>
-//                 </select>
-//               </div>
-              
-//               <button type="submit" className="w-full btn bg-accent-500 hover:bg-accent-600 text-white flex items-center justify-center">
-//                 <Mail size={16} className="mr-2" />
-//                 Subscribe Now
-//               </button>
-              
-//               <p className="text-xs text-primary-200 text-center mt-4">
-//                 By subscribing, you agree to our Privacy Policy and Terms of Service.
-//                 You can unsubscribe at any time.
-//               </p>
-//             </form>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default SubscribeSection;
