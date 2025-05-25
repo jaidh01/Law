@@ -23,14 +23,13 @@ const NetworkStatus: React.FC = () => {
     
     // Check API connectivity
     const checkApiConnection = async () => {
-      if (!navigator.onLine) return;
-      
       try {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000);
         
-        // Use the health check endpoint
+        // Use the health check endpoint with the correct domain
         const healthEndpoint = apiBaseUrl.replace('/api/articles', '/api/health');
+        console.log(`Checking API health at: ${healthEndpoint}`);
         await fetch(healthEndpoint, { signal: controller.signal });
         
         clearTimeout(timeoutId);

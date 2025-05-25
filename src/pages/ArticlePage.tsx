@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Share2, Bookmark, Printer, Facebook, Twitter, Linkedin } from 'lucide-react';
+import { ArrowLeft, Share2, Bookmark, Printer, Facebook, Twitter, Linkedin, Download, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { fetchArticleBySlug, fetchRelatedArticles } from '../services/articleService';
 import { Article } from '../types/article';
@@ -20,11 +20,14 @@ const ArticlePage: React.FC = () => {
       
       try {
         setLoading(true);
+        setError(null); // Reset error state
+        
         const articleData = await fetchArticleBySlug(articleSlug);
         
         if (articleData) {
+          console.log("Article data loaded:", articleData); // Add logging
           setArticle(articleData);
-          document.title = `${articleData.title} | LiveLaw`;
+          document.title = `${articleData.title} | Law Guru`;
           window.scrollTo(0, 0);
           
           // Fetch related articles
@@ -36,6 +39,7 @@ const ArticlePage: React.FC = () => {
           setError('Article not found');
         }
       } catch (err) {
+        console.error("Error loading article:", err); // Add error logging
         setError('Failed to load article');
       } finally {
         setLoading(false);
@@ -48,12 +52,7 @@ const ArticlePage: React.FC = () => {
   if (loading) {
     return (
       <div className="container-custom py-8">
-        <h1 className="text-3xl md:text-4xl font-serif font-bold mb-8">
-          {categoryName}
-        </h1>
-        <div className="bg-white rounded-lg shadow p-4 sm:p-8">
-          <LoadingIndicator message={`Loading ${categoryName} articles...`} />
-        </div>
+        <LoadingIndicator message="Loading article..." />
       </div>
     );
   }
@@ -63,7 +62,7 @@ const ArticlePage: React.FC = () => {
       <div className="container-custom py-12 text-center">
         <h1 className="text-3xl font-serif font-bold mb-4">Article Not Found</h1>
         <p className="text-neutral-600 mb-6">
-          The article you are looking for does not exist or has been removed.
+          {error || "The article you are looking for does not exist or has been removed."}
         </p>
         <Link to="/" className="btn btn-primary">
           Return to Home
@@ -71,6 +70,19 @@ const ArticlePage: React.FC = () => {
       </div>
     );
   }
+  
+  // Safely render content, handling potential null values
+  const renderContent = () => {
+    if (!article.content) {
+      return <p className="mb-4 text-neutral-600">No content available for this article.</p>;
+    }
+    
+    return article.content.split('\n\n').map((paragraph, index) => (
+      <p key={index} className="mb-4 leading-relaxed text-base sm:text-lg">
+        {paragraph}
+      </p>
+    ));
+  };
   
   return (
     <div className="container-custom py-8">
@@ -82,10 +94,10 @@ const ArticlePage: React.FC = () => {
       <article>
         <header className="mb-8">
           <Link 
-            to={`/category/${article.category.toLowerCase().replace(/\s+/g, '-')}`}
+            to={`/category/${article.category?.toLowerCase().replace(/\s+/g, '-') || '#'}`}
             className="inline-block px-3 py-1 bg-primary-100 text-primary-600 text-sm font-medium rounded mb-4"
           >
-            {article.category}
+            {article.category || "Uncategorized"}
           </Link>
           
           <h1 className="text-3xl md:text-4xl font-serif font-bold mb-4">
@@ -93,10 +105,10 @@ const ArticlePage: React.FC = () => {
           </h1>
           
           <div className="flex flex-wrap items-center text-sm text-neutral-600 mb-6">
-            <span className="font-medium">{article.author}</span>
+            <span className="font-medium">{article.author || "Anonymous"}</span>
             <span className="mx-2">•</span>
-            <time dateTime={article.date.toString()}>
-              {format(new Date(article.date), 'MMMM d, yyyy')}
+            <time dateTime={article.date?.toString() || ""}>
+              {article.date ? format(new Date(article.date), 'MMMM d, yyyy') : "Unknown date"}
             </time>
           </div>
           
@@ -115,24 +127,24 @@ const ArticlePage: React.FC = () => {
             </button>
           </div>
           
-          <img 
-            src={article.image} 
-            alt={article.title} 
-            className="w-full h-auto max-h-[500px] object-cover rounded-lg"
-          />
-          {article.imageCaption && (
-            <p className="text-sm text-neutral-500 mt-2 text-center">
-              {article.imageCaption}
-            </p>
+          {article.image && (
+            <>
+              <img 
+                src={article.image} 
+                alt={article.title} 
+                className="w-full h-auto max-h-[500px] object-cover rounded-lg"
+              />
+              {article.imageCaption && (
+                <p className="text-sm text-neutral-500 mt-2 text-center">
+                  {article.imageCaption}
+                </p>
+              )}
+            </>
           )}
         </header>
         
         <div className="prose prose-lg md:prose-xl max-w-none mb-8 prose-headings:font-serif prose-headings:font-bold prose-a:text-primary-600 prose-a:no-underline hover:prose-a:underline">
-          {article.content.split('\n\n').map((paragraph, index) => (
-            <p key={index} className="mb-4 leading-relaxed text-base sm:text-lg">
-              {paragraph}
-            </p>
-          ))}
+          {renderContent()}
         </div>
         
         {article.pdf_url && (
@@ -142,13 +154,13 @@ const ArticlePage: React.FC = () => {
                 <FileText size={24} className="text-primary-600 mr-3 shrink-0 mt-1 sm:mt-0" />
                 <div>
                   <p className="font-medium text-primary-800">
-                    {article.category.includes("Court") || article.tags.some(tag => tag.includes("Court") || tag.includes("Judgment")) 
+                    {article.category?.includes("Court") || article.tags?.some(tag => tag.includes("Court") || tag.includes("Judgment")) 
                       ? "Download PDF of Full Judgment" 
                       : "Download PDF Version"}
                   </p>
                   <p className="text-sm text-primary-600">
-                    {article.category.includes("Supreme") ? "Supreme Court of India" : 
-                    article.category.includes("High") ? "High Court Judgment" : 
+                    {article.category?.includes("Supreme") ? "Supreme Court of India" : 
+                    article.category?.includes("High") ? "High Court Judgment" : 
                     "Official Document"}
                   </p>
                 </div>
@@ -185,15 +197,15 @@ const ArticlePage: React.FC = () => {
           <div className="bg-neutral-50 p-6 rounded-lg">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-primary-100 text-primary-500 rounded-full flex items-center justify-center mr-4">
-                <span className="text-xl font-serif font-bold">{article.author.charAt(0)}</span>
+                <span className="text-xl font-serif font-bold">{(article.author || "A")[0]}</span>
               </div>
               <div>
-                <h3 className="font-serif font-bold">{article.author}</h3>
+                <h3 className="font-serif font-bold">{article.author || "Anonymous"}</h3>
                 <p className="text-sm text-neutral-600">Legal Correspondent</p>
               </div>
             </div>
             <p className="text-neutral-700">
-              {article.authorBio || `${article.author} is a legal correspondent at LiveLaw covering the latest developments in the legal field.`}
+              {article.authorBio || `${article.author || "Our correspondent"} is a legal correspondent at Law Guru covering the latest developments in the legal field.`}
             </p>
           </div>
         </footer>

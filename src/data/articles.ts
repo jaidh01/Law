@@ -719,23 +719,23 @@ export const featuredArticles: Article[] = [
 export const latestArticles: Article[] = [];
 
 export const getArticlesByCategory = (categorySlug: string): Article[] => {
-  const category = categorySlug
+  const normalizedCategory = categorySlug
     .split('-')
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
-    
-  return [...featuredArticles, ...latestArticles].filter(article => 
-    article.category.toLowerCase() === category.toLowerCase() ||
-    article.category.toLowerCase().replace(/\s+/g, '-') === categorySlug.toLowerCase()
+  
+  return [...featuredArticles].filter(article => 
+    article.category.toLowerCase() === normalizedCategory.toLowerCase()
   );
 };
 
-export const getArticleBySlug = (slug: string): Article | undefined => {
-  return [...featuredArticles, ...latestArticles].find(article => article.slug === slug);
+export const getArticleBySlug = (slug: string): Article | null => {
+  const article = featuredArticles.find(article => article.slug === slug);
+  return article || null;
 };
 
 export const getRelatedArticles = (category: string, currentSlug: string): Article[] => {
-  return [...featuredArticles, ...latestArticles]
+  return featuredArticles
     .filter(article => 
       article.category === category && 
       article.slug !== currentSlug

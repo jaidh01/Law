@@ -1,9 +1,12 @@
 import axios from 'axios';
 import { Article } from '../types/article';
 import apiBaseUrl from './apiConfig';
-
-// Add this import for mock articles
-import { featuredArticles as mockArticles } from '../data/articles';
+import {
+  featuredArticles as mockArticles,
+  getArticlesByCategory,
+  getArticleBySlug as getMockArticleBySlug,
+  getRelatedArticles as getMockRelatedArticles
+} from '../data/articles';
 
 const api = axios.create({
   baseURL: apiBaseUrl,
@@ -15,7 +18,9 @@ const api = axios.create({
 
 // Add a retry mechanism for mobile network instability
 const fetchWithRetry = async (url: string, retries = 3) => {
+  console.log(`Fetching from ${apiBaseUrl}${url}`); // Add logging to confirm URL
   let lastError;
+  
   for (let i = 0; i <= retries; i++) {
     try {
       const response = await api.get(url);
@@ -116,13 +121,17 @@ export const fetchArticlesByCategory = async (categorySlug: string): Promise<Art
     return mappedData;
   } catch (error) {
     console.error(`Error fetching articles for category ${categorySlug}:`, error);
+    
     // Try to use cached data
     const cachedData = localStorage.getItem(`category_${categorySlug}`);
     if (cachedData) {
       console.log(`Using cached data for category ${categorySlug}`);
       return JSON.parse(cachedData);
     }
-    throw error;
+    
+    // If no cached data, use mock data
+    console.log(`Using mock data for category ${categorySlug}`);
+    return getArticlesByCategory(categorySlug);
   }
 };
 
@@ -145,6 +154,15 @@ export const fetchArticleBySlug = async (slug: string): Promise<Article | null> 
     return mapArticleResponse(data);
   } catch (error) {
     console.error(`Error fetching article with slug ${slug}:`, error);
+    
+    // Try to use mock data as fallback
+    console.log(`Using mock data for article with slug ${slug}`);
+    const mockArticle = getMockArticleBySlug(slug);
+    
+    if (mockArticle) {
+      return mockArticle;
+    }
+    
     return null;
   }
 };
@@ -165,7 +183,10 @@ export const fetchRelatedArticles = async (category: string, currentSlug: string
     return data.map(mapArticleResponse);
   } catch (error) {
     console.error(`Error fetching related articles for ${category}:`, error);
-    return [];
+    
+    // Use mock data as fallback
+    console.log(`Using mock data for related articles to ${currentSlug}`);
+    return getMockRelatedArticles(category, currentSlug);
   }
 };
 
