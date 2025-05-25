@@ -13,7 +13,7 @@ const Footer: React.FC = () => {
               <Logo variant="light" />
             </div>
             <p className="text-neutral-300 mb-4">
-              LiveLaw is India's leading legal news portal providing updates on judgments, 
+              Legal Nest is India's leading legal news portal providing updates on judgments, 
               legal developments, law firms, and law schools.
             </p>
             <div className="flex space-x-4">
@@ -76,7 +76,7 @@ const Footer: React.FC = () => {
         </div>
         
         <div className="border-t border-neutral-800 pt-6 text-center text-neutral-400 text-sm">
-          <p>© {new Date().getFullYear()} LiveLaw. All Rights Reserved.</p>
+          <p>© {new Date().getFullYear()} Legal Nest. All Rights Reserved.</p>
         </div>
       </div>
     </footer>

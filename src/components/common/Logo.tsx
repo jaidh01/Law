@@ -13,7 +13,7 @@ const Logo: React.FC<LogoProps> = ({ variant = 'dark' }) => {
     <Link to="/" className="flex items-center">
       <Scale size={28} className={`${textColor} mr-2`} />
       <span className={`font-serif font-bold text-2xl ${textColor}`}>
-        Law Guru
+        Legal Nest
       </span>
     </Link>
   );

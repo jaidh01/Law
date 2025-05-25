@@ -4,7 +4,7 @@ import { navigationItems } from '../data/navigation';
 
 const CourtsHubPage: React.FC = () => {
   useEffect(() => {
-    document.title = 'Courts | LiveLaw';
+    document.title = 'Courts | Legal Nest';
   }, []);
   
   // Find the courts navigation item

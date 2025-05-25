@@ -27,7 +27,7 @@ const CourtPage: React.FC = () => {
         // Using the court name as a tag to filter articles
         const data = await fetchArticlesByTag(courtName);
         setArticles(data);
-        document.title = `${courtName} News & Updates | LiveLaw`;
+        document.title = `${courtName} News & Updates | Legal Nest`;
       } catch (err) {
         setError(`Failed to load ${courtName} articles`);
       } finally {

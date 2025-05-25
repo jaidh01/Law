@@ -19,7 +19,7 @@ const LawFirmsPage: React.FC = () => {
   }
   
   useEffect(() => {
-    document.title = `${pageTitle} | LiveLaw`;
+    document.title = `${pageTitle} | Legal Nest`;
   }, [pageTitle]);
   
   // Custom messages based on subsection

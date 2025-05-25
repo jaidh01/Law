@@ -7,7 +7,7 @@ import CategorySection from '../components/home/CategorySection';
 
 const HomePage: React.FC = () => {
   useEffect(() => {
-    document.title = 'LiveLaw - Legal News, Law Judgments, Law Firms News, Law School News';
+    document.title = 'Legal Nest - Legal News, Law Judgments, Law Firms News, Law School News';
   }, []);
 
   return (

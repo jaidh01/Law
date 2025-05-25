@@ -27,7 +27,7 @@ const ArticlePage: React.FC = () => {
         if (articleData) {
           console.log("Article data loaded:", articleData); // Add logging
           setArticle(articleData);
-          document.title = `${articleData.title} | Law Guru`;
+          document.title = `${articleData.title} | Legal Nest`;
           window.scrollTo(0, 0);
           
           // Fetch related articles
@@ -205,7 +205,7 @@ const ArticlePage: React.FC = () => {
               </div>
             </div>
             <p className="text-neutral-700">
-              {article.authorBio || `${article.author || "Our correspondent"} is a legal correspondent at Law Guru covering the latest developments in the legal field.`}
+              {article.authorBio || `${article.author || "Our correspondent"} is a legal correspondent at Legal Nest covering the latest developments in the legal field.`}
             </p>
           </div>
         </footer>

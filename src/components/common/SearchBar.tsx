@@ -40,7 +40,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ onClose }) => {
     <div className="fixed inset-0 bg-black/70 flex items-start justify-center pt-20 z-50 animate-fade-in">
       <div className="w-full max-w-2xl bg-white rounded-lg shadow-2xl p-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-serif font-bold">Search LiveLaw</h2>
+          <h2 className="text-xl font-serif font-bold">Search Legal Nest</h2>
           <button
             onClick={onClose}
             className="p-1 rounded-full hover:bg-neutral-100 transition-colors"
