@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Linkedin, Mail } from 'lucide-react';
 import Logo from '../common/Logo';
-import { subscribeToNewsletter } from '../../services/subscribeService';
+import { subscribeToNewsletter } from '../../services/domain/subscribeService';
 
 const Footer: React.FC = () => {
   const [footerEmail, setFooterEmail] = useState('');

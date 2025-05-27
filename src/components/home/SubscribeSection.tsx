@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, CheckCircle, AlertCircle } from 'lucide-react';
-import { subscribeToNewsletter } from '../../services/subscribeService';
+import { subscribeToNewsletter } from '../../services/domain/subscribeService';
 
 type SubscriptionStatus = 'idle' | 'loading' | 'success' | 'error';
 

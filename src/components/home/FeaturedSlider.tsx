@@ -6,6 +6,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { fetchFeaturedArticles } from '../../services/articleService';
 import { Article } from '../../types/article';
 import { RefreshCcw } from 'lucide-react';
+import Loading from '../common/Loading';
+import ImageWithFallback from '../common/ImageWithFallback';
 
 // Import Swiper styles
 import 'swiper/css';
@@ -91,10 +93,7 @@ const FeaturedSlider: React.FC<FeaturedSliderProps> = ({ maxArticles = 5 }) => {
   if (loading && articles.length === 0) {
     return (
       <div className="mb-12 rounded-xl overflow-hidden h-[300px] sm:h-[400px] bg-neutral-100 flex items-center justify-center">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
-          <p className="mt-4 text-neutral-600">Loading featured articles...</p>
-        </div>
+        <Loading size="medium" message="Loading featured articles..." />
       </div>
     );
   }

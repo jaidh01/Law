@@ -1,12 +1,11 @@
 /**
  * API base URL configuration
- * This will use the production URL in production mode,
- * and localhost for development
+ * Always uses the production backend URL regardless of environment
  */
 
-// Default to the production URL
-const apiBaseUrl = import.meta.env.PROD || !import.meta.env.VITE_USE_LOCAL_API 
-  ? 'https://law-backend-44pr.onrender.com/api/articles'
-  : 'http://localhost:5000/api/articles';
+// Always use the production backend URL
+const apiBaseUrl = 'https://law-backend-44pr.onrender.com/api/articles';
+
+console.log(`API Configuration: Using ${apiBaseUrl}`);
 
 export default apiBaseUrl;

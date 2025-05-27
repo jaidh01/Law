@@ -9,7 +9,7 @@ import CourtPage from './pages/CourtPage';
 import CourtsHubPage from './pages/CourtsHubPage'; 
 import LawFirmsPage from './pages/LawFirmsPage';
 import NetworkStatus from './components/common/NetworkStatus';
-import { syncLocalSubscribers } from './services/subscribeService';
+import { syncLocalSubscribers } from './services/domain/subscribeService';
 
 function App() {
   useEffect(() => {

@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Wifi, WifiOff, X, AlertCircle } from 'lucide-react';
-import apiBaseUrl from '../../services/apiConfig';
+import { 
+  checkApiConnection,
+  getNetworkStatus,
+  setupNetworkListeners,
+  isLowQualityConnection
+} from '../../services/domain/networkService';
 
 const NetworkStatus: React.FC = () => {
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
@@ -8,64 +13,70 @@ const NetworkStatus: React.FC = () => {
   const [apiError, setApiError] = useState<boolean>(false);
   
   useEffect(() => {
+    // Handle online status change
     const handleOnline = () => {
       setIsOnline(true);
       setVisible(true);
-      checkApiConnection(); // Check API when coming back online
-      setTimeout(() => setVisible(false), 3000);
+      
+      // Check API connectivity when coming back online
+      checkApiConnection()
+        .then(connected => {
+          setApiError(!connected);
+          setTimeout(() => setVisible(false), 3000);
+        })
+        .catch(() => {
+          setApiError(true);
+        });
     };
 
+    // Handle offline status change
     const handleOffline = () => {
       setIsOnline(false);
       setApiError(false); // Reset API error when offline
       setVisible(true);
     };
     
-    // Check API connectivity
-    const checkApiConnection = async () => {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
-        
-        // Use the health check endpoint with the correct domain
-        const healthEndpoint = apiBaseUrl.replace('/api/articles', '/api/health');
-        console.log(`Checking API health at: ${healthEndpoint}`);
-        await fetch(healthEndpoint, { signal: controller.signal });
-        
-        clearTimeout(timeoutId);
-        setApiError(false);
-      } catch (err) {
-        console.error('API connection test failed:', err);
-        setApiError(true);
-        setVisible(true);
-      }
-    };
-
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    // Set up network event listeners using our service
+    const cleanup = setupNetworkListeners(handleOnline, handleOffline);
     
     // Initial API check
     if (navigator.onLine) {
-      checkApiConnection();
+      checkApiConnection()
+        .then(connected => setApiError(!connected))
+        .catch(() => setApiError(true));
     }
     
     // Check connection quality
-    const checkConnectionQuality = () => {
-      if ('connection' in navigator && (navigator as any).connection) {
-        const conn = (navigator as any).connection;
-        if (conn.effectiveType === 'slow-2g' || conn.effectiveType === '2g') {
-          setVisible(true);
-        }
-      }
-    };
+    if (isLowQualityConnection()) {
+      setVisible(true);
+    }
     
-    checkConnectionQuality();
+    // Poll the API connection every minute when online
+    const intervalId = setInterval(() => {
+      if (navigator.onLine) {
+        checkApiConnection()
+          .then(connected => {
+            const wasDisconnected = apiError;
+            setApiError(!connected);
+            
+            // Show notification if connection state changed
+            if (wasDisconnected && connected) {
+              setVisible(true);
+              setTimeout(() => setVisible(false), 3000);
+            } else if (!wasDisconnected && !connected) {
+              setVisible(true);
+            }
+          })
+          .catch(() => setApiError(true));
+      }
+    }, 60000);
 
+    // Cleanup function
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      cleanup(); // Remove network listeners
+      clearInterval(intervalId); // Clear polling interval
     };
-  }, []);
+  }, [apiError]);
 
   if (!visible) return null;
 
