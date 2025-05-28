@@ -1,0 +1,31 @@
+name = "legal-nest"
+compatibility_date = "2023-09-04"
+main = "./dist/worker.js"
+
+[site]
+bucket = "./dist"
+
+# Add cache control for images to improve performance
+[site.upload]
+format = "service-worker"
+
+# Configure cache behavior for specific file types
+[[site.upload.rules]]
+type = "Image"
+globs = ["**/*.{jpg,jpeg,png,gif,webp,svg}"]
+fallthrough = true
+
+# Add browser cache headers for static assets
+[site.upload.browser_TTL]
+default = 86400 # 1 day
+pattern = ["**/*.{js,css,html}"]
+value = 3600 # 1 hour
+
+# Add longer cache for images
+pattern = ["**/*.{jpg,jpeg,png,gif,webp,svg}"]
+value = 604800 # 7 days
+
+# Handle SPA routing
+[[routes]]
+pattern = "/*"
+script = "worker.js"
