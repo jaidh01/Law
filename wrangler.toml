@@ -1,27 +1,33 @@
 name = "legalnest"
 compatibility_date = "2023-09-04"
 
+# Tell wrangler where your static files are
 [site]
 bucket = "./dist"
 
-# Handle SPA routing with a custom route
-[[rules]]
-type = "NavigationRoute"
-route = "/*"
-strategy = "html-fallback"
+# Basic configuration for a Pages project
+[build]
+command = "npm run build"
+output_dir = "dist"
 
-# Configure cache behavior for assets
-[[rules]]
-type = "CacheEverythingRule"
-cacheTtl = 86400 # 1 day
+# Configure custom routes for SPA
+[routes]
+pattern = "/*"
+script = "worker.js"
 
-# Set specific cache rules for file types
-[[rules]]
-type = "CacheRule"
-globs = ["**/*.{js,css,html}"]
-cacheTtl = 3600 # 1 hour
-
-[[rules]]
-type = "CacheRule"
-globs = ["**/*.{jpg,jpeg,png,gif,webp,svg}"]
-cacheTtl = 604800 # 7 days
+# Set up caching rules through headers
+[headers]
+  [headers."/*"]
+    Cache-Control = "public, max-age=86400"
+  
+  [headers."/*.js"]
+    Cache-Control = "public, max-age=3600"
+  
+  [headers."/*.css"]
+    Cache-Control = "public, max-age=3600"
+  
+  [headers."/*.html"]
+    Cache-Control = "public, max-age=3600"
+  
+  [headers."/*.{jpg,jpeg,png,gif,webp,svg}"]
+    Cache-Control = "public, max-age=604800"
