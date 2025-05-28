@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import { latestArticles } from '../../data/articles';
+import { ROUTES } from '../../constants/routes';
 
 const LatestNews: React.FC = () => {
   return (
@@ -16,25 +17,26 @@ const LatestNews: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {latestArticles.slice(0, 6).map((article) => (
           <article key={article.id} className="card card-hover animate-slide-up">
-            <Link to={`/article/${article.slug}`} className="block">
+            <Link to={article.slug ? ROUTES.ARTICLE_BY_SLUG(article.slug) : '#'} className="block">
               <img 
                 src={article.image} 
                 alt={article.title} 
                 className="w-full h-48 object-cover"
               />
             </Link>
-            <div className="p-4">
-              <Link 
-                to={`/category/${article.category.toLowerCase().replace(/\s+/g, '-')}`}
-                className="inline-block text-xs font-medium text-accent-500 mb-2"
-              >
-                {article.category}
+
+            <Link 
+              to={article.category ? ROUTES.CATEGORY_BY_SLUG(article.category.toLowerCase().replace(/\s+/g, '-')) : '#'}
+              className="inline-block text-xs font-medium text-accent-500 mb-2"
+            >
+              {article.category}
+            </Link>
+
+            <h3 className="text-lg font-serif font-bold mb-2 line-clamp-2">
+              <Link to={article.slug ? ROUTES.ARTICLE_BY_SLUG(article.slug) : '#'} className="hover:text-primary-500 transition-colors">
+                {article.title}
               </Link>
-              <h3 className="text-lg font-serif font-bold mb-2 line-clamp-2">
-                <Link to={`/article/${article.slug}`} className="hover:text-primary-500 transition-colors">
-                  {article.title}
-                </Link>
-              </h3>
+            </h3>
               <p className="text-neutral-600 text-sm mb-3 line-clamp-2">
                 {article.excerpt}
               </p>

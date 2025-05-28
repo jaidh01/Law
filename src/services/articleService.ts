@@ -7,6 +7,8 @@ import {
   getArticleBySlug as getMockArticleBySlug,
   getRelatedArticles as getMockRelatedArticles
 } from '../data/articles';
+import { validateSlug } from '../utils/slugUtils';
+import { getCategoryFallbackImage, getOptimizedImageUrl } from '../utils/imageUtils';
 
 /**
  * Fetches featured articles
@@ -46,6 +48,12 @@ export const fetchFeaturedArticles = async (limit: number = 5): Promise<Article[
  * Fetches articles by category
  */
 export const fetchArticlesByCategory = async (categorySlug: string): Promise<Article[]> => {
+  // Check if categorySlug is defined
+  if (!categorySlug) {
+    console.error('Category slug is undefined');
+    return [];
+  }
+
   try {
     const data = await api.getArticlesByCategory(categorySlug);
     const mappedData = data.map(mapArticleResponse);
@@ -74,27 +82,35 @@ export const fetchArticlesByCategory = async (categorySlug: string): Promise<Art
  * Fetches an article by slug
  */
 export const fetchArticleBySlug = async (slug: string): Promise<Article | null> => {
+  // Validate and sanitize the slug
+  const validSlug = validateSlug(slug);
+  
+  if (!validSlug) {
+    console.error('Invalid article slug:', slug);
+    return null;
+  }
+
   try {
-    const data = await api.getArticleBySlug(slug);
+    const data = await api.getArticleBySlug(validSlug);
     const article = mapArticleResponse(data);
     
     // Cache the article
-    saveToCache(CACHE_KEYS.ARTICLE_BY_SLUG(slug), article);
+    saveToCache(CACHE_KEYS.ARTICLE_BY_SLUG(validSlug), article);
     
     return article;
   } catch (error) {
-    console.error(`Error fetching article with slug ${slug}:`, error);
+    console.error(`Error fetching article with slug ${validSlug}:`, error);
     
     // Try to use cached data
-    const cachedArticle = getFromCache<Article>(CACHE_KEYS.ARTICLE_BY_SLUG(slug));
+    const cachedArticle = getFromCache<Article>(CACHE_KEYS.ARTICLE_BY_SLUG(validSlug));
     if (cachedArticle) {
-      console.log(`Using cached article for slug ${slug}`);
+      console.log(`Using cached article for slug ${validSlug}`);
       return cachedArticle;
     }
     
     // Try to use mock data as fallback
-    console.log(`Using mock data for article with slug ${slug}`);
-    const mockArticle = getMockArticleBySlug(slug);
+    console.log(`Using mock data for article with slug ${validSlug}`);
+    const mockArticle = getMockArticleBySlug(validSlug);
     
     if (mockArticle) {
       return mockArticle;
@@ -108,6 +124,12 @@ export const fetchArticleBySlug = async (slug: string): Promise<Article | null> 
  * Fetches articles by tag
  */
 export const fetchArticlesByTag = async (tagName: string): Promise<Article[]> => {
+  // Check if tagName is defined
+  if (!tagName) {
+    console.error('Tag name is undefined');
+    return [];
+  }
+
   try {
     const data = await api.getArticlesByTag(tagName);
     return data.map(mapArticleResponse);
@@ -127,6 +149,12 @@ export const fetchArticlesByTag = async (tagName: string): Promise<Article[]> =>
  * Fetches related articles
  */
 export const fetchRelatedArticles = async (category: string, currentSlug: string): Promise<Article[]> => {
+  // Check if category and currentSlug are defined
+  if (!category || !currentSlug) {
+    console.error('Category or current slug is undefined');
+    return [];
+  }
+
   try {
     const data = await api.getRelatedArticles(category, currentSlug);
     return data.map(mapArticleResponse);
@@ -143,6 +171,14 @@ export const fetchRelatedArticles = async (category: string, currentSlug: string
  * Helper function to map API response to frontend Article type
  */
 const mapArticleResponse = (data: any): Article => {
+  const category = data.category || "Uncategorized";
+  const categorySlug = category.toLowerCase().replace(/\s+/g, '-');
+  
+  // Process the image URL - use provided image or fallback to category-specific image
+  const imageUrl = data.image 
+    ? getOptimizedImageUrl(data.image) 
+    : getCategoryFallbackImage(categorySlug);
+  
   return {
     id: data._id || data.id,
     title: data.title,
@@ -152,9 +188,10 @@ const mapArticleResponse = (data: any): Article => {
     author: data.author,
     authorBio: data.authorBio,
     date: data.published_date || data.createdAt || data.date,
-    image: data.image || 'https://images.pexels.com/photos/5668858/pexels-photo-5668858.jpeg', // Default image
-    imageCaption: data.imageCaption,
-    category: data.category,
+    image: imageUrl,
+    imageCaption: data.imageCaption || `${category} - Legal news and updates`,
+    imageAlt: data.imageAlt || data.title,
+    category: category,
     tags: data.tags || [],
     pdf_url: data.pdf_url,
     source: data.source

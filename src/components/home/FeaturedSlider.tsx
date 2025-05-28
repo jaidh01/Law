@@ -8,6 +8,7 @@ import { Article } from '../../types/article';
 import { RefreshCcw } from 'lucide-react';
 import Loading from '../common/Loading';
 import ImageWithFallback from '../common/ImageWithFallback';
+import { ROUTES } from '../../constants/routes'; // Add this import
 
 // Import Swiper styles
 import 'swiper/css';
@@ -133,13 +134,14 @@ const FeaturedSlider: React.FC<FeaturedSliderProps> = ({ maxArticles = 5 }) => {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 md:p-8 text-white">
                 <Link 
-                  to={`/category/${article.category.toLowerCase().replace(/\s+/g, '-')}`}
+                  to={article.category ? ROUTES.CATEGORY_BY_SLUG(article.category.toLowerCase().replace(/\s+/g, '-')) : '#'}
                   className="inline-block px-3 py-1 bg-accent-500 text-white text-xs sm:text-sm font-medium rounded mb-2 sm:mb-3"
                 >
                   {article.category}
                 </Link>
+
                 <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3 text-white line-clamp-2">
-                  <Link to={`/article/${article.slug}`} className="hover:underline">
+                  <Link to={article.slug ? ROUTES.ARTICLE_BY_SLUG(article.slug) : '#'} className="hover:underline">
                     {article.title}
                   </Link>
                 </h2>

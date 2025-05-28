@@ -5,6 +5,7 @@ import { fetchArticlesByCategory } from '../../services/articleService';
 import { Article } from '../../types/article';
 import { ChefHat } from 'lucide-react';
 import EmptyState from '../common/EmptyState';
+import { ROUTES } from '../../constants/routes';
 
 interface CategorySectionProps {
   title: string;
@@ -78,7 +79,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ title, categorySlug }
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <article className="card overflow-hidden animate-slide-up">
-            <Link to={`/article/${featuredArticle.slug}`} className="block">
+            <Link to={featuredArticle.slug ? ROUTES.ARTICLE_BY_SLUG(featuredArticle.slug) : '#'} className="block">
               <img 
                 src={featuredArticle.image} 
                 alt={featuredArticle.title} 
@@ -87,7 +88,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ title, categorySlug }
             </Link>
             <div className="p-5">
               <h3 className="text-xl font-serif font-bold mb-3">
-                <Link to={`/article/${featuredArticle.slug}`} className="hover:text-primary-500 transition-colors">
+                <Link to={featuredArticle.slug ? ROUTES.ARTICLE_BY_SLUG(featuredArticle.slug) : '#'} className="hover:text-primary-500 transition-colors">
                   {featuredArticle.title}
                 </Link>
               </h3>
@@ -108,7 +109,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ title, categorySlug }
         <div className="space-y-4">
           {otherArticles.map((article) => (
             <article key={article.id} className="flex gap-4 p-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow animate-slide-up">
-              <Link to={`/article/${article.slug}`} className="shrink-0">
+              <Link to={article.slug ? ROUTES.ARTICLE_BY_SLUG(article.slug) : '#'} className="shrink-0">
                 <img 
                   src={article.image} 
                   alt={article.title} 
@@ -117,7 +118,7 @@ const CategorySection: React.FC<CategorySectionProps> = ({ title, categorySlug }
               </Link>
               <div className="min-w-0">
                 <h3 className="text-base font-serif font-bold mb-1 line-clamp-2">
-                  <Link to={`/article/${article.slug}`} className="hover:text-primary-500 transition-colors">
+                  <Link to={article.slug ? ROUTES.ARTICLE_BY_SLUG(article.slug) : '#'} className="hover:text-primary-500 transition-colors">
                     {article.title}
                   </Link>
                 </h3>

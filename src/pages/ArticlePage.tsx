@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Share2, Bookmark, Printer, Facebook, Twitter, Linkedin, Download, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { fetchArticleBySlug, fetchRelatedArticles } from '../services/articleService';
 import { Article } from '../types/article';
 import ArticleCard from '../components/articles/ArticleCard';
 import LoadingIndicator from '../components/common/LoadingIndicator';
+import { validateSlug } from '../utils/slugUtils';
+import { ROUTES } from '../constants/routes';
+import ImageWithFallback from '../components/common/ImageWithFallback';
 
 const ArticlePage: React.FC = () => {
   const { articleSlug } = useParams<{ articleSlug: string }>();
+  const navigate = useNavigate();
   const [article, setArticle] = useState<Article | null>(null);
   const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -16,30 +20,37 @@ const ArticlePage: React.FC = () => {
   
   useEffect(() => {
     const loadArticle = async () => {
-      if (!articleSlug) return;
+      // Validate the articleSlug
+      const validSlug = validateSlug(articleSlug);
+      
+      if (!validSlug) {
+        console.error("Invalid article slug:", articleSlug);
+        setError('Article not found - invalid URL');
+        setLoading(false);
+        return;
+      }
       
       try {
         setLoading(true);
-        setError(null); // Reset error state
+        setError(null);
         
-        const articleData = await fetchArticleBySlug(articleSlug);
+        const articleData = await fetchArticleBySlug(validSlug);
         
         if (articleData) {
-          console.log("Article data loaded:", articleData); // Add logging
           setArticle(articleData);
           document.title = `${articleData.title} | Legal Nest`;
           window.scrollTo(0, 0);
           
           // Fetch related articles
           if (articleData.category) {
-            const related = await fetchRelatedArticles(articleData.category, articleSlug);
+            const related = await fetchRelatedArticles(articleData.category, validSlug);
             setRelatedArticles(related);
           }
         } else {
           setError('Article not found');
         }
       } catch (err) {
-        console.error("Error loading article:", err); // Add error logging
+        console.error("Error loading article:", err);
         setError('Failed to load article');
       } finally {
         setLoading(false);
@@ -47,7 +58,7 @@ const ArticlePage: React.FC = () => {
     };
     
     loadArticle();
-  }, [articleSlug]);
+  }, [articleSlug, navigate]);
   
   if (loading) {
     return (
@@ -94,7 +105,7 @@ const ArticlePage: React.FC = () => {
       <article>
         <header className="mb-8">
           <Link 
-            to={`/category/${article.category?.toLowerCase().replace(/\s+/g, '-') || '#'}`}
+            to={article.category ? ROUTES.CATEGORY_BY_SLUG(article.category?.toLowerCase().replace(/\s+/g, '-')) : '#'}
             className="inline-block px-3 py-1 bg-primary-100 text-primary-600 text-sm font-medium rounded mb-4"
           >
             {article.category || "Uncategorized"}
@@ -128,18 +139,19 @@ const ArticlePage: React.FC = () => {
           </div>
           
           {article.image && (
-            <>
-              <img 
-                src={article.image} 
-                alt={article.title} 
-                className="w-full h-auto max-h-[500px] object-cover rounded-lg"
+            <div className="mb-6">
+              <ImageWithFallback 
+                src={article.image}
+                alt={article.imageCaption || article.title}
+                className="w-full h-auto rounded-lg"
+                loading="eager"
               />
               {article.imageCaption && (
                 <p className="text-sm text-neutral-500 mt-2 text-center">
                   {article.imageCaption}
                 </p>
               )}
-            </>
+            </div>
           )}
         </header>
         

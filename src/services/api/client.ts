@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
 import { API_ENDPOINTS } from './endpoints';
-import apiBaseUrl from '../apiConfig'; // Make sure to import apiBaseUrl here
+import apiBaseUrl from '../apiConfig';
+import { validateSlug } from '../../utils/slugUtils';
 
 // Use the apiBaseUrl from your config instead of hardcoding it
 const BASE_URL = apiBaseUrl.replace('/api/articles', '/api');
@@ -22,8 +23,13 @@ export const api = {
   getFeaturedArticles: (limit?: number) => 
     fetchWithRetry<any[]>(`/articles/featured${limit ? `?limit=${limit}` : ''}`),
   
-  getArticleBySlug: (slug: string) => 
-    fetchWithRetry<any>(`/articles/${slug}`),
+  getArticleBySlug: (slug: string) => {
+    const validSlug = validateSlug(slug);
+    if (!validSlug) {
+      return Promise.reject(new Error('Invalid article slug'));
+    }
+    return fetchWithRetry<any>(`/articles/${validSlug}`);
+  },
   
   getArticlesByCategory: (categorySlug: string) => 
     fetchWithRetry<any[]>(`/articles/category/${categorySlug}`),

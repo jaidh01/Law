@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Article } from '../types/article';
 import { fetchArticleBySlug, fetchArticlesByCategory, fetchRelatedArticles } from '../services/articleService';
+import { validateSlug } from '../utils/slugUtils';
 
 export function useArticle(slug: string | undefined) {
   const [article, setArticle] = useState<Article | null>(null);
@@ -9,21 +10,26 @@ export function useArticle(slug: string | undefined) {
   const [error, setError] = useState<string | null>(null);
   
   useEffect(() => {
-    if (!slug) return;
+    const validSlug = validateSlug(slug);
+    if (!validSlug) {
+      setError('Invalid article slug');
+      setLoading(false);
+      return;
+    }
     
     const loadArticle = async () => {
       try {
         setLoading(true);
         setError(null);
         
-        const articleData = await fetchArticleBySlug(slug);
+        const articleData = await fetchArticleBySlug(validSlug);
         
         if (articleData) {
           setArticle(articleData);
           document.title = `${articleData.title} | Legal Nest`;
           
           if (articleData.category) {
-            const related = await fetchRelatedArticles(articleData.category, slug);
+            const related = await fetchRelatedArticles(articleData.category, validSlug);
             setRelatedArticles(related);
           }
         } else {

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import slugify from 'slugify';
 
 const ArticleSchema = new mongoose.Schema({
   title: {
@@ -30,8 +31,13 @@ const ArticleSchema = new mongoose.Schema({
   subcategory: String,
   tags: [String],
   source: String,
-  image: String,
+  image: {
+    type: String,
+    default: 'https://images.pexels.com/photos/5668858/pexels-photo-5668858.jpeg'
+  },
   imageCaption: String,
+  imageAlt: String, // New field for better accessibility
+  imageCredit: String, // New field for attribution
   pdf_url: String
 }, {
   timestamps: true
@@ -39,16 +45,28 @@ const ArticleSchema = new mongoose.Schema({
 
 // Generate slug from title if not provided
 ArticleSchema.pre('save', function(next) {
+  if (!this.slug && this.title) {
+    // Create a slug from the title
+    this.slug = slugify(this.title, {
+      lower: true,
+      strict: true,
+      trim: true
+    });
+  }
+  
+  // If still no slug, generate a random one
   if (!this.slug) {
-    this.slug = this.title
-      .toLowerCase()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-');
+    this.slug = `article-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
   }
   
   // Generate excerpt from content if not provided
   if (!this.excerpt && this.content) {
     this.excerpt = this.content.substring(0, 200) + '...';
+  }
+  
+  // Set image alt text if not provided
+  if (!this.imageAlt && this.title) {
+    this.imageAlt = this.title;
   }
   
   next();
