@@ -2,32 +2,5 @@ name = "legalnest"
 compatibility_date = "2023-09-04"
 main = "./dist/worker.js"
 
-# Tell wrangler where your static files are
 [site]
 bucket = "./dist"
-
-# Configure custom routes for SPA - routes must be an array
-[[routes]]
-pattern = "/*"
-script = "worker.js"
-
-# Headers must be defined in a specific format
-[[headers]]
-pattern = "/*"
-headers = { Cache-Control = "public, max-age=86400" }
-
-[[headers]]
-pattern = "/*.js"
-headers = { Cache-Control = "public, max-age=3600" }
-
-[[headers]]
-pattern = "/*.css"
-headers = { Cache-Control = "public, max-age=3600" }
-
-[[headers]]
-pattern = "/*.html"
-headers = { Cache-Control = "public, max-age=3600" }
-
-[[headers]]
-pattern = "/*.{jpg,jpeg,png,gif,webp,svg}"
-headers = { Cache-Control = "public, max-age=604800" }
