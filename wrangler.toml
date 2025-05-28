@@ -18,10 +18,12 @@ fallthrough = true
 # Add browser cache headers for static assets
 [site.upload.browser_TTL]
 default = 86400 # 1 day
+
+[[site.upload.browser_TTL.override]]
 pattern = ["**/*.{js,css,html}"]
 value = 3600 # 1 hour
 
-# Add longer cache for images
+[[site.upload.browser_TTL.override]]
 pattern = ["**/*.{jpg,jpeg,png,gif,webp,svg}"]
 value = 604800 # 7 days
 
